@@ -21,12 +21,14 @@ export class HomeComponent implements OnInit {
   constructor(private courseService: CoursesService) { }
 
   ngOnInit() {
+    this.reloadCourses();
+  }
+
+  reloadCourses() {
     const courses$ = this.courseService.loadAllCourses().pipe(map((courses) => courses.sort(sortCoursesBySeqNo)));
     this.beginnerCourses$ = courses$.pipe(map(courses => courses.filter((course) => course.category === "BEGINNER")));
     this.advancedCourses$ = courses$.pipe(map(courses => courses.filter((course) => course.category === "ADVANCED")));
   }
-
-
 
 }
 
