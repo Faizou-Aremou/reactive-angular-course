@@ -17,6 +17,11 @@
       "dom",
       "ES2017.object"
     ],
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "preserveWhitespaces": true,
+    // ...
   }
 }
