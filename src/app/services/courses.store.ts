@@ -7,7 +7,7 @@ import { MessagesService } from "../messages/messages.service";
 import { CoursesService } from "./courses.service";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 //service statefull, service facade, viewModel, modelClass
 export class CoursesStore {
@@ -15,30 +15,61 @@ export class CoursesStore {
 
   courses$: Observable<Course[]> = this.subject.asObservable();
 
-  constructor(private coursesService: CoursesService, private loading: LoadingService, private messages: MessagesService) {
+  constructor(
+    private coursesService: CoursesService,
+    private loading: LoadingService,
+    private messages: MessagesService
+  ) {
     this.loadAllCourses();
   }
 
-  // you can have only one way to be notified by new data. 
-  // thus this function can return instead void and use subject to provide courses data. 
+  // you can have only one way to be notified by new data.
+  // thus this function can return instead void and use subject to provide courses data.
   filterByCategory(category: string): Observable<Course[]> {
     return this.courses$.pipe(
-      map(courses => courses.filter(course => course.category === category).sort(sortCoursesBySeqNo)
+      map((courses) =>
+        courses
+          .filter((course) => course.category === category)
+          .sort(sortCoursesBySeqNo)
       )
-    )
+    );
   }
 
   private loadAllCourses() {
     const loadCourses$ = this.coursesService.loadAllCourses().pipe(
-      catchError(err => {
+      catchError((err) => {
         const message = "Could not not load courses";
         this.messages.showErrors(message);
         console.error(message, err);
         return throwError(err);
       }),
-      tap(courses => this.subject.next(courses))
+      tap((courses) => this.subject.next(courses))
     );
     this.loading.showLoaderUntilCompleted(loadCourses$).subscribe();
   }
 
+  saveCourse(courseId: string, changes: Partial<Course>): void {
+    const courses = this.subject.getValue();
+    const updatedCourses = courses.map((course) => {
+      return course.id === courseId ? { ...course, ...changes } : course;
+    });
+    this.subject.next(updatedCourses);
+    const savedCourses = this.coursesService
+      .saveCourse(courseId, changes)
+      .pipe(
+        catchError((err) => {
+          const message = "Could not save course";
+          console.log(message, err);
+          this.messages.showErrors(message);
+          return throwError(err);
+        }),
+        // tap((uCourse)=> {
+        //   const updatedCourses = courses.map((course) => {
+        //     return course.id === uCourse.id ? uCourse : course;
+        //   });
+        //   this.subject.next(updatedCourses)
+        // })
+      )
+      .subscribe();
+  }
 }
